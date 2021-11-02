@@ -2368,7 +2368,7 @@ WHERE f.status = 'Arrived' </sql>
     </remotesteps>
     <GUI>
       <xloc>1216</xloc>
-      <yloc>224</yloc>
+      <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -2444,7 +2444,7 @@ WHERE f.status = 'Arrived' </sql>
     </remotesteps>
     <GUI>
       <xloc>1200</xloc>
-      <yloc>112</yloc>
+      <yloc>96</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
