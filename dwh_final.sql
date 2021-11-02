@@ -1,14 +1,25 @@
 CREATE SCHEMA dim; 
 CREATE SCHEMA fact;
 
+
 -- создаем справочник дат calendar
 CREATE TABLE dim.calendar (
-	id serial PRIMARY KEY, -- ключ
-	"date" date UNIQUE NOT NULL , -- дата
+--	id bigint PRIMARY KEY, -- ключ
+	date_time timestamptz PRIMARY KEY NOT NULL, -- дата-врем€ - ключ
+	"date" date  NOT NULL , -- дата
+	"month" int4  NOT NULL , -- мес€ц
 	YEAR int4 NOT NULL, -- год
 	n_week int4 NOT NULL, -- недел€
 	day_week varchar(10) NOT NULL-- день недели
 );
+
+-- заполн€ем справочник дат calendar скриптом SQL
+INSERT INTO dim.calendar(date_time, "date", "month", "year", n_week, day_week)
+SELECT gs AS date_time, gs::date, date_part('month', gs), date_part('year', gs), date_part('week', gs), to_char(gs, 'day')
+FROM generate_series('2016-09-13', current_date, interval '1 minute') as gs; 
+-- 2016-09-13 - мин дата в таблице полетов. ћакс дата равна текущей на тот случай, если данные будут обновл€тьс€.
+
+
 
 -- создаем справочник пассажиров passengers
 CREATE TABLE dim.passengers (
@@ -42,23 +53,20 @@ CREATE TABLE dim.tariff (
 	fare_conditions varchar(10) NOT NULL -- тариф (bookings.seats.fare_conditions)
 );
 
--- заполн€ем справочник дат calendar скриптом SQL
-INSERT INTO dim.calendar("date",YEAR,n_week, day_week)
-SELECT gs::date, date_part('year', gs), date_part('week', gs), to_char(gs, 'day')
-FROM generate_series('2016-09-13', current_date, interval '1 day') as gs; 
--- 2016-09-13 - мин дата в таблице полетов. через запрос ее вложить нельз€, так как базы схем между собой не св€заны. ћакс дата равна текущей на тот случай, если данные будут обновл€тьс€.
+
+
 
 
 --таблица фактов Flights - содержит совершенные перелеты. 
 --≈сли в рамках билета был сложный маршрут с пересадками - каждый сегмент учитываем независимо
 
-DROP TABLE fact.flights;
+--DROP TABLE fact.flights;
 CREATE TABLE fact.flights (
 	flight_no bpchar(6) NOT NULL, -- в задании не указано поле с номером рейса, но совокупность номера рейса (flight_no) и даты отправлени€ (scheduled_departure или actual_departure) 
 	--€вл€ютс€ естественным ключом, поэтому добавление данного пол€ упростит работу конечного пользовател€ с таблицей фактов
 	passenger_id text references dim.passengers(passenger_id), -- ѕассажир (bookings.tickets.passenger_name)
-	actual_departure timestamp NOT NULL, -- ƒата и врем€ вылета (факт) (bookings.flights.actual_departure)
-	actual_arrival timestamp NOT NULL, -- ƒата и врем€ прилета (факт) (bookings.flights.actual_arrival)
+	actual_departure timestamp NOT NULL REFERENCES dim.calendar(date_time), -- ƒата и врем€ вылета (факт) (bookings.flights.actual_departure)
+	actual_arrival timestamp NOT NULL REFERENCES dim.calendar(date_time), -- ƒата и врем€ прилета (факт) (bookings.flights.actual_arrival)
 	delay_time_departure int4 NOT NULL, -- «адержка вылета (разница между фактической и запланированной датой в секундах) (bookings.flights.actual_departure - bookings.flights.scheduled_departure)
 	delay_time_arrival int4 NOT NULL, -- «адержка прилета (разница между фактической и запланированной датой в секундах) (bookings.flights.actual_arrival - bookings.flights.scheduled_arrival)
 	aircraft_code varchar(30) NOT NULL REFERENCES dim.aircrafts(aircraft_code), -- код самолета (bookings.flights.aircraft_code)
@@ -125,4 +133,6 @@ CREATE TABLE rejected.tariff (
 fare_conditions varchar(10),
 reason_for_rejection TEXT -- поле с причиной отклонени€
 );
+
+
 
