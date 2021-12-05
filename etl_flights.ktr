@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>passenger</name>
+    <name>etl_flights</name>
     <description/>
     <extended_description/>
     <trans_version/>
@@ -563,54 +563,64 @@
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>невалидный e-mail</from>
+      <from>невалидная дата вылета</from>
       <to>Загрузка не валидных значений</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Валидность запланированной даты вылета</from>
+      <to>проверка даты прилета</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Валидность запланированной даты вылета</from>
+      <to>невалидная дата вылета</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>проверка даты прилета</from>
+      <to>невалидная дата прилета</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>невалидная дата прилета</from>
+      <to>Загрузка не валидных значений</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Загрузка из flights</from>
+      <to>Проверка на NULL</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>проверка даты прилета</from>
+      <to>Calculator</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Calculator</from>
+      <to>Выгрузка в dim.flights</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>today</from>
+      <to>Join </to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>Join </from>
+      <to>Валидность запланированной даты вылета</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>Проверка на NULL</from>
-      <to>Валидность Е-mail</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Валидность Е-mail</from>
-      <to>Проверка телефона</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Валидность Е-mail</from>
-      <to>невалидный e-mail</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Проверка телефона</from>
-      <to>неверный формат номера телефона</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>неверный формат номера телефона</from>
-      <to>Загрузка не валидных значений</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Проверка телефона</from>
-      <to>Выгрузка в dim.passengers</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Загрузка из tickets</from>
-      <to>Database lookup</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Database lookup</from>
-      <to>Проверка на NULL</to>
+      <to>Join </to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>Database lookup</name>
-    <type>DBLookup</type>
+    <name>Calculator</name>
+    <type>Calculator</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -619,41 +629,37 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>booking</connection>
-    <cache>N</cache>
-    <cache_load_all>N</cache_load_all>
-    <cache_size>0</cache_size>
-    <lookup>
-      <schema>bookings</schema>
-      <table>ticket_flights</table>
-      <orderby/>
-      <fail_on_multiple>N</fail_on_multiple>
-      <eat_row_on_failure>N</eat_row_on_failure>
-      <key>
-        <name>ticket_no</name>
-        <field>ticket_no</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>flight_id</name>
-        <rename>flight_id</rename>
-        <default/>
-        <type>None</type>
-      </value>
-      <value>
-        <name>fare_conditions</name>
-        <rename>fare_conditions</rename>
-        <default/>
-        <type>String</type>
-      </value>
-      <value>
-        <name>amount</name>
-        <rename>amount</rename>
-        <default/>
-        <type>Integer</type>
-      </value>
-    </lookup>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>delay_time_departure</field_name>
+      <calc_type>DATE_DIFF_SEC</calc_type>
+      <field_a>actual_departure</field_a>
+      <field_b>scheduled_departure</field_b>
+      <field_c/>
+      <value_type>None</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>delay_time_arrival</field_name>
+      <calc_type>DATE_DIFF_SEC</calc_type>
+      <field_a>actual_arrival</field_a>
+      <field_b>scheduled_arrival</field_b>
+      <field_c/>
+      <value_type>None</value_type>
+      <value_length>-1</value_length>
+      <value_precision>-1</value_precision>
+      <remove>N</remove>
+      <conversion_mask/>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -663,8 +669,45 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>176</xloc>
+      <xloc>944</xloc>
       <yloc>336</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Join </name>
+    <type>JoinRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <directory>%%java.io.tmpdir%%</directory>
+    <prefix>out</prefix>
+    <cache_size>500</cache_size>
+    <main/>
+    <compare>
+      <condition>
+        <negated>N</negated>
+        <leftvalue/>
+        <function>=</function>
+        <rightvalue/>
+      </condition>
+    </compare>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>528</xloc>
+      <yloc>448</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
@@ -708,7 +751,38 @@
     </GUI>
   </step>
   <step>
-    <name>Валидность Е-mail</name>
+    <name>today</name>
+    <type>SystemInfo</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <fields>
+      <field>
+        <name>time</name>
+        <type>today start</type>
+      </field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>400</xloc>
+      <yloc>448</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>Валидность запланированной даты вылета</name>
     <type>FilterRows</type>
     <description/>
     <distribute>Y</distribute>
@@ -718,33 +792,24 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <send_true_to>Проверка телефона</send_true_to>
-    <send_false_to>невалидный e-mail</send_false_to>
+    <send_true_to>проверка даты прилета</send_true_to>
+    <send_false_to>невалидная дата вылета</send_false_to>
     <compare>
       <condition>
         <negated>N</negated>
         <conditions>
           <condition>
             <negated>N</negated>
-            <leftvalue>email</leftvalue>
-            <function>IS NULL</function>
+            <leftvalue>scheduled_departure</leftvalue>
+            <function>IS NOT NULL</function>
             <rightvalue/>
           </condition>
           <condition>
             <negated>N</negated>
             <operator>OR</operator>
-            <leftvalue>email</leftvalue>
-            <function>LIKE</function>
-            <rightvalue/>
-            <value>
-              <name>constant</name>
-              <type>String</type>
-              <text>%\w+@\w+\.\w+</text>
-              <length>-1</length>
-              <precision>-1</precision>
-              <isnull>N</isnull>
-              <mask/>
-            </value>
+            <leftvalue>scheduled_departure</leftvalue>
+            <function>&lt;</function>
+            <rightvalue>time</rightvalue>
           </condition>
         </conditions>
       </condition>
@@ -764,7 +829,7 @@
     </GUI>
   </step>
   <step>
-    <name>Выгрузка в dim.passengers</name>
+    <name>Выгрузка в dim.flights</name>
     <type>PGBulkLoader</type>
     <description/>
     <distribute>Y</distribute>
@@ -776,45 +841,65 @@
     </partitioning>
     <connection>dwh_final</connection>
     <schema>dim</schema>
-    <table>passengers</table>
+    <table>flights</table>
     <load_action>INSERT</load_action>
     <dbname_override/>
     <enclosure>"</enclosure>
     <delimiter>;</delimiter>
     <stop_on_error>N</stop_on_error>
     <mapping>
-      <stream_name>passenger_name</stream_name>
-      <field_name>passenger_name</field_name>
-      <date_mask/>
-    </mapping>
-    <mapping>
-      <stream_name>phone</stream_name>
-      <field_name>phone</field_name>
-      <date_mask/>
-    </mapping>
-    <mapping>
-      <stream_name>email</stream_name>
-      <field_name>email</field_name>
-      <date_mask/>
-    </mapping>
-    <mapping>
-      <stream_name>passenger_id</stream_name>
-      <field_name>ticket_no</field_name>
-      <date_mask/>
-    </mapping>
-    <mapping>
       <stream_name>flight_id</stream_name>
       <field_name>flight_id</field_name>
       <date_mask/>
     </mapping>
     <mapping>
-      <stream_name>fare_conditions</stream_name>
-      <field_name>fare_conditions</field_name>
+      <stream_name>flight_no</stream_name>
+      <field_name>flight_no</field_name>
       <date_mask/>
     </mapping>
     <mapping>
-      <stream_name>amount</stream_name>
-      <field_name>amount</field_name>
+      <stream_name>scheduled_departure</stream_name>
+      <field_name>scheduled_departure</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>scheduled_arrival</stream_name>
+      <field_name>scheduled_arrival</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>airports_departure_code</stream_name>
+      <field_name>departure_airport</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>airports_arrival_code</stream_name>
+      <field_name>arrival_airport</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>aircraft_code</stream_name>
+      <field_name>aircraft_code</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>actual_departure</stream_name>
+      <field_name>actual_departure</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>actual_arrival</stream_name>
+      <field_name>actual_arrival</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>delay_time_departure</stream_name>
+      <field_name>delay_time_departure</field_name>
+      <date_mask/>
+    </mapping>
+    <mapping>
+      <stream_name>delay_time_arrival</stream_name>
+      <field_name>delay_time_arrival</field_name>
       <date_mask/>
     </mapping>
     <attributes/>
@@ -826,13 +911,13 @@
       </output>
     </remotesteps>
     <GUI>
-      <xloc>992</xloc>
+      <xloc>1120</xloc>
       <yloc>336</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Загрузка из tickets</name>
+    <name>Загрузка из flights</name>
     <type>TableInput</type>
     <description/>
     <distribute>N</distribute>
@@ -843,11 +928,17 @@
       <schema_name/>
     </partitioning>
     <connection>booking</connection>
-    <sql>SELECT DISTINCT t.ticket_no
-				, t.passenger_name
-				, t.contact_data ->> 'phone' AS phone
-				, t.contact_data ->> 'email' AS email 
-FROM bookings.tickets t</sql>
+    <sql>SELECT f.flight_id
+		,f.flight_no
+		,f.scheduled_departure	
+		,f.scheduled_arrival
+		,f.departure_airport	
+		,f.arrival_airport	
+		,f.aircraft_code	
+		,f.actual_departure
+		,f.actual_arrival 
+FROM bookings.flights f 
+WHERE f.status = 'Arrived'</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -856,13 +947,82 @@ FROM bookings.tickets t</sql>
     <cached_row_meta_active>N</cached_row_meta_active>
     <row-meta>
       <value-meta>
+        <type>Integer</type>
+        <storagetype>normal</storagetype>
+        <name>flight_id</name>
+        <length>9</length>
+        <precision>0</precision>
+        <origin>Загрузка из flights</origin>
+        <comments>flight_id</comments>
+        <conversion_Mask>####0;-####0</conversion_Mask>
+        <decimal_symbol>,</decimal_symbol>
+        <grouping_symbol> </grouping_symbol>
+        <currency_symbol/>
+        <trim_type>none</trim_type>
+        <case_insensitive>N</case_insensitive>
+        <collator_disabled>Y</collator_disabled>
+        <collator_strength>0</collator_strength>
+        <sort_descending>N</sort_descending>
+        <output_padding>N</output_padding>
+        <date_format_lenient>N</date_format_lenient>
+        <date_format_locale>ru_RU</date_format_locale>
+        <date_format_timezone>Europe/Moscow</date_format_timezone>
+        <lenient_string_to_number>N</lenient_string_to_number>
+      </value-meta>
+      <value-meta>
         <type>String</type>
         <storagetype>normal</storagetype>
-        <name>ticket_no</name>
-        <length>13</length>
+        <name>flight_no</name>
+        <length>6</length>
         <precision>-1</precision>
-        <origin>Загрузка из tickets</origin>
-        <comments>ticket_no</comments>
+        <origin>Загрузка из flights</origin>
+        <comments>flight_no</comments>
+        <conversion_Mask/>
+        <decimal_symbol>,</decimal_symbol>
+        <grouping_symbol> </grouping_symbol>
+        <currency_symbol/>
+        <trim_type>none</trim_type>
+        <case_insensitive>N</case_insensitive>
+        <collator_disabled>Y</collator_disabled>
+        <collator_strength>0</collator_strength>
+        <sort_descending>N</sort_descending>
+        <output_padding>N</output_padding>
+        <date_format_lenient>N</date_format_lenient>
+        <date_format_locale>ru_RU</date_format_locale>
+        <date_format_timezone>Europe/Moscow</date_format_timezone>
+        <lenient_string_to_number>N</lenient_string_to_number>
+      </value-meta>
+      <value-meta>
+        <type>Timestamp</type>
+        <storagetype>normal</storagetype>
+        <name>scheduled_departure</name>
+        <length>6</length>
+        <precision>-1</precision>
+        <origin>Загрузка из flights</origin>
+        <comments>scheduled_departure</comments>
+        <conversion_Mask/>
+        <decimal_symbol>,</decimal_symbol>
+        <grouping_symbol> </grouping_symbol>
+        <currency_symbol/>
+        <trim_type>none</trim_type>
+        <case_insensitive>N</case_insensitive>
+        <collator_disabled>Y</collator_disabled>
+        <collator_strength>0</collator_strength>
+        <sort_descending>N</sort_descending>
+        <output_padding>N</output_padding>
+        <date_format_lenient>N</date_format_lenient>
+        <date_format_locale>ru_RU</date_format_locale>
+        <date_format_timezone>Europe/Moscow</date_format_timezone>
+        <lenient_string_to_number>N</lenient_string_to_number>
+      </value-meta>
+      <value-meta>
+        <type>Timestamp</type>
+        <storagetype>normal</storagetype>
+        <name>scheduled_arrival</name>
+        <length>6</length>
+        <precision>-1</precision>
+        <origin>Загрузка из flights</origin>
+        <comments>scheduled_arrival</comments>
         <conversion_Mask/>
         <decimal_symbol>,</decimal_symbol>
         <grouping_symbol> </grouping_symbol>
@@ -881,11 +1041,11 @@ FROM bookings.tickets t</sql>
       <value-meta>
         <type>String</type>
         <storagetype>normal</storagetype>
-        <name>passenger_name</name>
-        <length>2147483647</length>
+        <name>departure_airport</name>
+        <length>3</length>
         <precision>-1</precision>
-        <origin>Загрузка из tickets</origin>
-        <comments>passenger_name</comments>
+        <origin>Загрузка из flights</origin>
+        <comments>departure_airport</comments>
         <conversion_Mask/>
         <decimal_symbol>,</decimal_symbol>
         <grouping_symbol> </grouping_symbol>
@@ -904,11 +1064,11 @@ FROM bookings.tickets t</sql>
       <value-meta>
         <type>String</type>
         <storagetype>normal</storagetype>
-        <name>phone</name>
-        <length>2147483647</length>
+        <name>arrival_airport</name>
+        <length>3</length>
         <precision>-1</precision>
-        <origin>Загрузка из tickets</origin>
-        <comments>phone</comments>
+        <origin>Загрузка из flights</origin>
+        <comments>arrival_airport</comments>
         <conversion_Mask/>
         <decimal_symbol>,</decimal_symbol>
         <grouping_symbol> </grouping_symbol>
@@ -927,11 +1087,57 @@ FROM bookings.tickets t</sql>
       <value-meta>
         <type>String</type>
         <storagetype>normal</storagetype>
-        <name>email</name>
-        <length>2147483647</length>
+        <name>aircraft_code</name>
+        <length>3</length>
         <precision>-1</precision>
-        <origin>Загрузка из tickets</origin>
-        <comments>email</comments>
+        <origin>Загрузка из flights</origin>
+        <comments>aircraft_code</comments>
+        <conversion_Mask/>
+        <decimal_symbol>,</decimal_symbol>
+        <grouping_symbol> </grouping_symbol>
+        <currency_symbol/>
+        <trim_type>none</trim_type>
+        <case_insensitive>N</case_insensitive>
+        <collator_disabled>Y</collator_disabled>
+        <collator_strength>0</collator_strength>
+        <sort_descending>N</sort_descending>
+        <output_padding>N</output_padding>
+        <date_format_lenient>N</date_format_lenient>
+        <date_format_locale>ru_RU</date_format_locale>
+        <date_format_timezone>Europe/Moscow</date_format_timezone>
+        <lenient_string_to_number>N</lenient_string_to_number>
+      </value-meta>
+      <value-meta>
+        <type>Timestamp</type>
+        <storagetype>normal</storagetype>
+        <name>actual_departure</name>
+        <length>6</length>
+        <precision>-1</precision>
+        <origin>Загрузка из flights</origin>
+        <comments>actual_departure</comments>
+        <conversion_Mask/>
+        <decimal_symbol>,</decimal_symbol>
+        <grouping_symbol> </grouping_symbol>
+        <currency_symbol/>
+        <trim_type>none</trim_type>
+        <case_insensitive>N</case_insensitive>
+        <collator_disabled>Y</collator_disabled>
+        <collator_strength>0</collator_strength>
+        <sort_descending>N</sort_descending>
+        <output_padding>N</output_padding>
+        <date_format_lenient>N</date_format_lenient>
+        <date_format_locale>ru_RU</date_format_locale>
+        <date_format_timezone>Europe/Moscow</date_format_timezone>
+        <lenient_string_to_number>N</lenient_string_to_number>
+      </value-meta>
+      <value-meta>
+        <type>Timestamp</type>
+        <storagetype>normal</storagetype>
+        <name>actual_arrival</name>
+        <length>6</length>
+        <precision>-1</precision>
+        <origin>Загрузка из flights</origin>
+        <comments>actual_arrival</comments>
         <conversion_Mask/>
         <decimal_symbol>,</decimal_symbol>
         <grouping_symbol> </grouping_symbol>
@@ -957,7 +1163,7 @@ FROM bookings.tickets t</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>64</xloc>
+      <xloc>96</xloc>
       <yloc>336</yloc>
       <draw>Y</draw>
     </GUI>
@@ -975,7 +1181,7 @@ FROM bookings.tickets t</sql>
     </partitioning>
     <connection>dwh_final</connection>
     <schema>rejected</schema>
-    <table>passengers</table>
+    <table>dim_flights</table>
     <commit>1000</commit>
     <truncate>Y</truncate>
     <ignore_errors>N</ignore_errors>
@@ -992,36 +1198,44 @@ FROM bookings.tickets t</sql>
     <return_field/>
     <fields>
       <field>
-        <column_name>passenger_id</column_name>
-        <stream_name>ticket_no</stream_name>
+        <column_name>flight_id</column_name>
+        <stream_name>flight_id</stream_name>
       </field>
       <field>
-        <column_name>passenger_name</column_name>
-        <stream_name>passenger_name</stream_name>
+        <column_name>flight_no</column_name>
+        <stream_name>flight_no</stream_name>
       </field>
       <field>
-        <column_name>phone</column_name>
-        <stream_name>phone</stream_name>
+        <column_name>scheduled_departure</column_name>
+        <stream_name>scheduled_departure</stream_name>
       </field>
       <field>
-        <column_name>email</column_name>
-        <stream_name>email</stream_name>
+        <column_name>scheduled_arrival</column_name>
+        <stream_name>scheduled_arrival</stream_name>
+      </field>
+      <field>
+        <column_name>aircraft_code</column_name>
+        <stream_name>aircraft_code</stream_name>
+      </field>
+      <field>
+        <column_name>actual_departure</column_name>
+        <stream_name>actual_departure</stream_name>
+      </field>
+      <field>
+        <column_name>actual_arrival</column_name>
+        <stream_name>actual_arrival</stream_name>
       </field>
       <field>
         <column_name>reason_for_rejection</column_name>
         <stream_name>reason_for_rejection</stream_name>
       </field>
       <field>
-        <column_name>flight_id</column_name>
-        <stream_name>flight_id</stream_name>
+        <column_name>airports_departure_code</column_name>
+        <stream_name>departure_airport</stream_name>
       </field>
       <field>
-        <column_name>fare_conditions</column_name>
-        <stream_name>fare_conditions</stream_name>
-      </field>
-      <field>
-        <column_name>amount</column_name>
-        <stream_name>amount</stream_name>
+        <column_name>airports_arrival_code</column_name>
+        <stream_name>arrival_airport</stream_name>
       </field>
     </fields>
     <attributes/>
@@ -1049,7 +1263,7 @@ FROM bookings.tickets t</sql>
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <send_true_to>Валидность Е-mail</send_true_to>
+    <send_true_to>Join </send_true_to>
     <send_false_to>NULL в ключевом поле</send_false_to>
     <compare>
       <condition>
@@ -1057,14 +1271,28 @@ FROM bookings.tickets t</sql>
         <conditions>
           <condition>
             <negated>N</negated>
-            <leftvalue>passenger_name</leftvalue>
+            <leftvalue>flight_id</leftvalue>
             <function>IS NOT NULL</function>
             <rightvalue/>
           </condition>
           <condition>
             <negated>N</negated>
             <operator>AND</operator>
-            <leftvalue>ticket_no</leftvalue>
+            <leftvalue>flight_no</leftvalue>
+            <function>IS NOT NULL</function>
+            <rightvalue/>
+          </condition>
+          <condition>
+            <negated>N</negated>
+            <operator>AND</operator>
+            <leftvalue>arrival_airport</leftvalue>
+            <function>IS NOT NULL</function>
+            <rightvalue/>
+          </condition>
+          <condition>
+            <negated>N</negated>
+            <operator>AND</operator>
+            <leftvalue>departure_airport</leftvalue>
             <function>IS NOT NULL</function>
             <rightvalue/>
           </condition>
@@ -1086,63 +1314,7 @@ FROM bookings.tickets t</sql>
     </GUI>
   </step>
   <step>
-    <name>Проверка телефона</name>
-    <type>FilterRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <send_true_to>Выгрузка в dim.passengers</send_true_to>
-    <send_false_to>неверный формат номера телефона</send_false_to>
-    <compare>
-      <condition>
-        <negated>N</negated>
-        <conditions>
-          <condition>
-            <negated>N</negated>
-            <leftvalue>phone</leftvalue>
-            <function>LIKE</function>
-            <rightvalue/>
-            <value>
-              <name>constant</name>
-              <type>String</type>
-              <text>\+[0-9]{11}</text>
-              <length>-1</length>
-              <precision>-1</precision>
-              <isnull>N</isnull>
-              <mask/>
-            </value>
-          </condition>
-          <condition>
-            <negated>N</negated>
-            <operator>OR</operator>
-            <leftvalue>phone</leftvalue>
-            <function>IS NULL</function>
-            <rightvalue/>
-          </condition>
-        </conditions>
-      </condition>
-    </compare>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>736</xloc>
-      <yloc>336</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>невалидный e-mail</name>
+    <name>невалидная дата вылета</name>
     <type>Constant</type>
     <description/>
     <distribute>Y</distribute>
@@ -1160,7 +1332,7 @@ FROM bookings.tickets t</sql>
         <currency/>
         <decimal/>
         <group/>
-        <nullif>невалидный e-mail</nullif>
+        <nullif>невалидная дата вылета</nullif>
         <length>-1</length>
         <precision>-1</precision>
         <set_empty_string>N</set_empty_string>
@@ -1181,7 +1353,7 @@ FROM bookings.tickets t</sql>
     </GUI>
   </step>
   <step>
-    <name>неверный формат номера телефона</name>
+    <name>невалидная дата прилета</name>
     <type>Constant</type>
     <description/>
     <distribute>Y</distribute>
@@ -1199,7 +1371,7 @@ FROM bookings.tickets t</sql>
         <currency/>
         <decimal/>
         <group/>
-        <nullif>неверный формат номера телефона</nullif>
+        <nullif>невалидная дата прилета</nullif>
         <length>-1</length>
         <precision>-1</precision>
         <set_empty_string>N</set_empty_string>
@@ -1216,6 +1388,53 @@ FROM bookings.tickets t</sql>
     <GUI>
       <xloc>736</xloc>
       <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>проверка даты прилета</name>
+    <type>FilterRows</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <send_true_to>Calculator</send_true_to>
+    <send_false_to>невалидная дата прилета</send_false_to>
+    <compare>
+      <condition>
+        <negated>N</negated>
+        <conditions>
+          <condition>
+            <negated>N</negated>
+            <leftvalue>scheduled_arrival</leftvalue>
+            <function>&gt;</function>
+            <rightvalue>scheduled_departure</rightvalue>
+          </condition>
+          <condition>
+            <negated>N</negated>
+            <operator>OR</operator>
+            <leftvalue>scheduled_arrival</leftvalue>
+            <function>IS NOT NULL</function>
+            <rightvalue/>
+          </condition>
+        </conditions>
+      </condition>
+    </compare>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>736</xloc>
+      <yloc>336</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
